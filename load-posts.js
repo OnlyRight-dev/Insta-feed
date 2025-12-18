@@ -13,13 +13,13 @@ async function checkPostImages(postNumber) {
                 const img = new Image();
                 let resolved = false;
                 
-                // Timeout velocissimo: se non carica in 30ms, considera non trovata
+                // Timeout velocissimo: se non carica in 20ms, considera non trovata
                 const timeout = setTimeout(() => {
                     if (!resolved) {
                         resolved = true;
                         resolve(false);
                     }
-                }, 30);
+                }, 20);
                 
                 img.onload = () => {
                     if (!resolved) {
@@ -41,10 +41,10 @@ async function checkPostImages(postNumber) {
             });
         };
         
-        // Cerca IMMEDIATAMENTE solo 1Post.png (pattern più comune - 95% dei casi)
-        // Controlla solo i primi 3 numeri in parallelo per velocità MASSIMA
+        // Cerca IMMEDIATAMENTE solo 1Post.png (pattern più comune - 99% dei casi)
+        // Controlla solo i primi 5 numeri in parallelo per velocità MASSIMA
         const imageChecks = [];
-        for (let num = 1; num <= 3; num++) {
+        for (let num = 1; num <= 5; num++) {
             const imagePath = `${imagesDirectory}${num}Post.png`;
             imageChecks.push(
                 testImageExists(imagePath).then(exists => ({ exists, path: imagePath, num }))
@@ -54,12 +54,19 @@ async function checkPostImages(postNumber) {
         // Esegui tutti i controlli in parallelo (velocissimo)
         const results = await Promise.all(imageChecks);
         
-        // Aggiungi solo le immagini trovate
+        // Aggiungi solo le immagini trovate, ordinate per numero
         for (const result of results) {
             if (result.exists) {
                 foundImages.push(result.path);
             }
         }
+        
+        // Ordina per numero
+        foundImages.sort((a, b) => {
+            const numA = parseInt(a.match(/(\d+)/)?.[1] || '999');
+            const numB = parseInt(b.match(/(\d+)/)?.[1] || '999');
+            return numA - numB;
+        });
         
         // Ordina per numero
         foundImages.sort((a, b) => {
@@ -563,9 +570,50 @@ async function loadPosts() {
             }
         }
     } else {
-        // Se c'è un config, usa SOLO quello (zero controlli aggiuntivi per velocità massima)
-        console.log('📋 Config trovato, uso SOLO i post del config (nessun controllo aggiuntivo)');
+        // Se c'è un config, usa quello come base e verifica velocemente i post successivi
+        console.log('📋 Config trovato, verifico anche post aggiuntivi...');
         postNumbers = [...configOrder];
+        
+        const lastConfigPost = Math.max(...configOrder);
+        const maxAdditionalCheck = 5; // Controlla solo i prossimi 5 post
+        
+        // Verifica velocemente i post successivi (solo se non in file://)
+        if (window.location.protocol !== 'file:') {
+            // Controlla in parallelo per velocità
+            const additionalChecks = [];
+            for (let i = lastConfigPost + 1; i <= lastConfigPost + maxAdditionalCheck; i++) {
+                const postNumberStr = i.toString().padStart(2, '0');
+                const postFile = `${postNumberStr}-post.html`;
+                const htmlPath = `posts/${postFile}`;
+                
+                additionalChecks.push(
+                    fetch(htmlPath, { 
+                        method: 'HEAD', 
+                        cache: 'no-cache'
+                    })
+                    .then(response => ({ number: i, exists: response.ok }))
+                    .catch(() => ({ number: i, exists: false }))
+                );
+            }
+            
+            const results = await Promise.all(additionalChecks);
+            console.log(`📋 Risultati controlli post aggiuntivi:`, results);
+            for (const result of results) {
+                if (result.exists) {
+                    postNumbers.push(result.number);
+                    console.log(`✅ Post ${result.number} trovato e aggiunto`);
+                } else {
+                    console.log(`❌ Post ${result.number} non trovato`);
+                }
+            }
+        } else {
+            // In file://, aggiungi i prossimi post (verificati durante il caricamento)
+            for (let i = lastConfigPost + 1; i <= lastConfigPost + maxAdditionalCheck; i++) {
+                postNumbers.push(i);
+            }
+        }
+        
+        console.log(`📋 Config: ${configOrder.length} post, trovati ${postNumbers.length - configOrder.length} aggiuntivi`);
     }
     
     console.log(`📋 Caricherò ${postNumbers.length} post: ${postNumbers.join(', ')}`);
@@ -596,22 +644,30 @@ async function loadPosts() {
             // Prima prova HTML fallback hardcoded
             if (postsContent[postFile]) {
                 htmlContent = postsContent[postFile];
+                console.log(`📄 [Post ${postNumber}] Usato HTML fallback hardcoded`);
             } else {
                 // Se non c'è fallback, prova a caricare il file HTML dalla cartella posts/
                 try {
                     const htmlPath = `posts/${postFile}`;
+                    console.log(`📄 [Post ${postNumber}] Tentativo caricamento da: ${htmlPath}`);
                     const response = await fetch(htmlPath, { 
                         method: 'GET',
                         cache: 'no-cache'
                     });
+                    console.log(`📄 [Post ${postNumber}] Response status: ${response.status}`);
                     if (response.ok) {
                         htmlContent = await response.text();
-                        if (!htmlContent || htmlContent.trim().length === 0) {
+                        if (htmlContent && htmlContent.trim().length > 0) {
+                            console.log(`✅ [Post ${postNumber}] HTML caricato con successo (${htmlContent.length} caratteri)`);
+                        } else {
                             htmlContent = null;
+                            console.log(`⚠️ [Post ${postNumber}] HTML vuoto o non valido`);
                         }
+                    } else {
+                        console.log(`❌ [Post ${postNumber}] Response non OK: ${response.status}`);
                     }
                 } catch (error) {
-                    // Ignora errori
+                    console.error(`❌ [Post ${postNumber}] Errore fetch HTML:`, error.message);
                 }
             }
             
