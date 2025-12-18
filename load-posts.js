@@ -13,13 +13,13 @@ async function checkPostImages(postNumber) {
                 const img = new Image();
                 let resolved = false;
                 
-                // Timeout veloce: se non carica in 300ms, considera non trovata
+                // Timeout velocissimo: se non carica in 100ms, considera non trovata
                 const timeout = setTimeout(() => {
                     if (!resolved) {
                         resolved = true;
                         resolve(false);
                     }
-                }, 300);
+                }, 100);
                 
                 img.onload = () => {
                     if (!resolved) {
@@ -41,32 +41,44 @@ async function checkPostImages(postNumber) {
             });
         };
         
-        // Cerca immagini da 1 a 20 con pattern comuni
-        // Cerca sequenzialmente per evitare duplicati (stessa immagine con case diverso)
-        // Ottimizzato: cerca solo i pattern più comuni per velocità
-        for (let num = 1; num <= 20; num++) {
-            // Pattern prioritari (più comuni) - solo i più usati per velocità
+        // Cerca immagini da 1 a 10 (ridotto per velocità) con SOLO i pattern più comuni
+        // Carica in parallelo per velocità massima
+        const imageChecks = [];
+        for (let num = 1; num <= 10; num++) {
+            // SOLO i 3 pattern più comuni (ridotto drasticamente)
             const priorityPatterns = [
-                `${num}Post.png`, `${num}Post.jpg`, `${num}Post.jpeg`,
-                `${num}Post copy.png`, `${num}Post copy.jpg`,
-                `${num}.png`, `${num}.jpg`, `${num}.jpeg`
+                `${num}Post.png`,
+                `${num}Post.jpg`,
+                `${num}.png`
             ];
             
-            // Cerca sequenzialmente e fermati alla prima immagine trovata per questo numero
-            // Questo evita di trovare la stessa immagine con nomi diversi (es. 1Post.png e 1post.png)
+            // Crea promesse per controlli paralleli
             for (const pattern of priorityPatterns) {
                 const imagePath = `${imagesDirectory}${pattern}`;
-                const exists = await testImageExists(imagePath);
-                if (exists) {
-                    // Verifica che non sia un duplicato (case-insensitive)
-                    const normalizedPath = imagePath.toLowerCase();
-                    const isDuplicate = foundImages.some(img => img.toLowerCase() === normalizedPath);
-                    
-                    if (!isDuplicate) {
-                        foundImages.push(imagePath);
-                        break; // Trovata un'immagine per questo numero, passa al prossimo
-                    }
+                imageChecks.push(
+                    testImageExists(imagePath).then(exists => ({ exists, path: imagePath, num }))
+                );
+            }
+        }
+        
+        // Esegui tutti i controlli in parallelo
+        const results = await Promise.all(imageChecks);
+        
+        // Processa risultati e aggiungi immagini trovate (senza duplicati)
+        const foundByNum = new Map();
+        for (const result of results) {
+            if (result.exists) {
+                const normalizedPath = result.path.toLowerCase();
+                if (!foundByNum.has(result.num) || !foundImages.some(img => img.toLowerCase() === normalizedPath)) {
+                    foundByNum.set(result.num, result.path);
                 }
+            }
+        }
+        
+        // Aggiungi immagini in ordine
+        for (let num = 1; num <= 10; num++) {
+            if (foundByNum.has(num)) {
+                foundImages.push(foundByNum.get(num));
             }
         }
         
@@ -522,136 +534,89 @@ async function loadPosts() {
                 }
             }
         } else {
-            // Con server HTTP (produzione), verifica i file esistenti
-            console.log('📋 Rilevamento (server HTTP/produzione): controllo file esistenti');
+            // Con server HTTP (produzione), verifica i file esistenti SEQUENZIALMENTE (più veloce)
+            console.log('📋 Rilevamento veloce (server HTTP/produzione): controllo sequenziale');
             
             let consecutiveEmpty = 0;
-            const maxConsecutiveEmpty = 10; // Aumentato per produzione (più permissivo)
+            const maxConsecutiveEmpty = 5; // Ridotto per fermarsi prima
             
-            // Crea array di promesse per controllare tutti i post in parallelo (più veloce)
-            const postChecks = [];
-            
+            // Controlla sequenzialmente e fermati dopo pochi vuoti (più veloce)
             for (let i = 1; i <= maxPosts; i++) {
                 const postNumberStr = i.toString().padStart(2, '0');
                 const postFile = `${postNumberStr}-post.html`;
                 
-                // Se c'è HTML fallback, aggiungilo subito
+                let hasContent = false;
+                
+                // Controlla HTML fallback hardcoded (veloce, no fetch)
                 if (postsContent[postFile]) {
-                    postChecks.push(Promise.resolve({ number: i, exists: true, source: 'fallback' }));
+                    hasContent = true;
                 } else {
-                    // Controlla se esiste il file HTML
-                    const htmlPath = `posts/${postFile}`;
-                    postChecks.push(
-                        fetch(htmlPath, { 
+                    // Controlla se esiste il file HTML con timeout veloce
+                    try {
+                        const htmlPath = `posts/${postFile}`;
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 200); // Timeout 200ms
+                        
+                        const response = await fetch(htmlPath, { 
                             method: 'HEAD',
-                            cache: 'no-cache'
-                        })
-                        .then(response => ({ number: i, exists: response.ok, source: 'file' }))
-                        .catch(() => ({ number: i, exists: false, source: 'error' }))
-                    );
+                            cache: 'no-cache',
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeoutId);
+                        if (response.ok) {
+                            hasContent = true;
+                        }
+                    } catch (error) {
+                        // Ignora errori (timeout o file non trovato)
+                    }
                 }
-            }
-            
-            // Attendi tutti i controlli in parallelo
-            const results = await Promise.all(postChecks);
-            
-            // Processa i risultati
-            for (const result of results) {
-                if (result.exists) {
-                    postNumbers.push(result.number);
+                
+                if (hasContent) {
+                    postNumbers.push(i);
                     consecutiveEmpty = 0;
                 } else {
                     consecutiveEmpty++;
                     if (consecutiveEmpty >= maxConsecutiveEmpty) {
-                        console.log(`🛑 Fermato dopo ${result.number - maxConsecutiveEmpty} post trovati (${consecutiveEmpty} vuoti consecutivi)`);
+                        console.log(`🛑 Fermato dopo ${i - maxConsecutiveEmpty} post trovati (${consecutiveEmpty} vuoti consecutivi)`);
                         break;
                     }
                 }
             }
         }
     } else {
-        // Se c'è un config, usa quello come base, ma aggiungi anche altri post trovati dinamicamente
-        console.log('📋 Config trovato, verifico anche altri post dinamicamente...');
-        
-        const isFileProtocol = window.location.protocol === 'file:';
-        const maxPosts = 50;
-        const foundPosts = new Set(configOrder); // Inizia con i post del config
-        
-        if (isFileProtocol) {
-            // In file://, aggiungi tutti i post fino a maxPosts
-            for (let i = 1; i <= maxPosts; i++) {
-                foundPosts.add(i);
-            }
-        } else {
-            // In produzione, verifica dinamicamente
-            const postChecks = [];
-            for (let i = 1; i <= maxPosts; i++) {
-                if (foundPosts.has(i)) continue; // Già nel config
-                
-                const postNumberStr = i.toString().padStart(2, '0');
-                const postFile = `${postNumberStr}-post.html`;
-                
-                if (postsContent[postFile]) {
-                    foundPosts.add(i);
-                } else {
-                    const htmlPath = `posts/${postFile}`;
-                    postChecks.push(
-                        fetch(htmlPath, { method: 'HEAD', cache: 'no-cache' })
-                        .then(response => response.ok ? i : null)
-                        .catch(() => null)
-                    );
-                }
-            }
-            
-            const additionalPosts = await Promise.all(postChecks);
-            additionalPosts.forEach(num => {
-                if (num !== null) foundPosts.add(num);
-            });
-        }
-        
-        // Se c'è un config, mantieni l'ordine del config e aggiungi gli altri alla fine
+        // Se c'è un config, usa SOLO quello (zero controlli aggiuntivi per velocità massima)
+        console.log('📋 Config trovato, uso SOLO i post del config (nessun controllo aggiuntivo)');
         postNumbers = [...configOrder];
-        const additional = Array.from(foundPosts).filter(num => !configOrder.includes(num)).sort((a, b) => a - b);
-        postNumbers.push(...additional);
-        
-        console.log(`📋 Config: ${configOrder.length} post, trovati ${additional.length} aggiuntivi`);
     }
     
     console.log(`📋 Caricherò ${postNumbers.length} post: ${postNumbers.join(', ')}`);
     
-    // Per ogni post, controlla se ci sono immagini o usa HTML fallback
-    for (const postNumber of postNumbers) {
+    // Carica tutti i post in PARALLELO per velocità massima
+    const postLoadPromises = postNumbers.map(async (postNumber) => {
         const postNumberStr = postNumber.toString().padStart(2, '0');
         const postFile = `${postNumberStr}-post.html`;
-        
-        console.log(`\n📋 [Post ${postNumber}] Controllo immagini...`);
-        
+
         // Controlla se ci sono immagini
         const images = await checkPostImages(postNumber);
-        
+
         if (images && images.length > 0) {
             // CI SONO IMMAGINI: crea post con immagini
-            console.log(`✅ [Post ${postNumber}] Trovate ${images.length} immagini, creo post con immagini`);
             const imageContent = createImagePost(images, postNumber);
             if (imageContent) {
-                postFiles.push({
+                return {
                     number: postNumber,
                     filename: postFile,
                     content: imageContent,
                     isImage: true
-                });
-                console.log(`✅ [Post ${postNumber}] Post creato con immagini`);
+                };
             }
         } else {
             // NON CI SONO IMMAGINI: prova prima HTML fallback, poi file HTML
-            console.log(`ℹ️ [Post ${postNumber}] Nessuna immagine trovata, cerco HTML...`);
-            
             let htmlContent = null;
-            
+
             // Prima prova HTML fallback hardcoded
             if (postsContent[postFile]) {
                 htmlContent = postsContent[postFile];
-                console.log(`📄 [Post ${postNumber}] Usato HTML fallback hardcoded`);
             } else {
                 // Se non c'è fallback, prova a caricare il file HTML dalla cartella posts/
                 try {
@@ -662,32 +627,17 @@ async function loadPosts() {
                     });
                     if (response.ok) {
                         htmlContent = await response.text();
-                        if (htmlContent && htmlContent.trim().length > 0) {
-                            console.log(`📄 [Post ${postNumber}] Caricato file HTML da posts/${postFile}`);
-                        } else {
+                        if (!htmlContent || htmlContent.trim().length === 0) {
                             htmlContent = null;
-                            console.log(`⚠️ [Post ${postNumber}] File posts/${postFile} vuoto o non valido`);
                         }
-                    } else {
-                        console.log(`⚠️ [Post ${postNumber}] File posts/${postFile} non trovato (status: ${response.status})`);
                     }
                 } catch (error) {
-                    console.log(`⚠️ [Post ${postNumber}] Errore nel caricare posts/${postFile}:`, error.message);
-                    if (window.location.protocol === 'file:') {
-                        console.error(`❌ [Post ${postNumber}] IMPOSSIBILE caricare file HTML con file://`);
-                        console.error(`❌ [Post ${postNumber}] I fetch falliscono sempre in file://`);
-                        console.error(`💡 SOLUZIONE: Esegui start-server.bat e apri http://localhost:8000/index.html`);
-                        // In file://, i fetch falliscono sempre, quindi il post non può essere caricato
-                        // Dobbiamo dire all'utente di usare un server HTTP
-                    }
+                    // Ignora errori
                 }
             }
             
             if (htmlContent) {
                 // Rimuovi classi hardcoded e aggiungi solo feed-item
-                // Le classi specifiche verranno aggiunte dinamicamente in base al contenuto
-                
-                // Rimuovi tutte le classi hardcoded dal div principale
                 htmlContent = htmlContent.replace(
                     /class="feed-item[^"]*"/g,
                     'class="feed-item"'
@@ -698,19 +648,14 @@ async function loadPosts() {
                 
                 if (htmlContent.includes('carousel-container') || htmlContent.includes('carousel-slide')) {
                     postClass += ' carousel-post';
-                    console.log(`🎠 [Post ${postNumber}] Rilevato carosello nell'HTML fallback`);
                 } else if (htmlContent.includes('quote-post-content') || htmlContent.includes('quote-text')) {
                     postClass += ' quote-post';
-                    console.log(`💬 [Post ${postNumber}] Rilevato quote post nell'HTML fallback`);
                 } else if (htmlContent.includes('info-post-content') || htmlContent.includes('info-title')) {
                     postClass += ' info-post';
-                    console.log(`ℹ️ [Post ${postNumber}] Rilevato info post nell'HTML fallback`);
                 } else if (htmlContent.includes('cta-post-content') || htmlContent.includes('cta-button')) {
                     postClass += ' cta-post';
-                    console.log(`📢 [Post ${postNumber}] Rilevato CTA post nell'HTML fallback`);
                 } else if (htmlContent.includes('special-post-content') || htmlContent.includes('phone-mockup')) {
                     postClass += ' special-post';
-                    console.log(`⭐ [Post ${postNumber}] Rilevato special post nell'HTML fallback`);
                 }
                 
                 // Sostituisci la classe nel contenuto
@@ -719,18 +664,21 @@ async function loadPosts() {
                     `class="${postClass}"`
                 );
                 
-                postFiles.push({
+                return {
                     number: postNumber,
                     filename: postFile,
                     content: htmlContent,
                     isImage: false
-                });
-                console.log(`✅ [Post ${postNumber}] Post creato con HTML fallback (classe: ${postClass})`);
-            } else {
-                console.log(`⚠️ [Post ${postNumber}] Nessuna immagine e nessun HTML fallback disponibile, salto questo post`);
+                };
             }
         }
-    }
+        
+        return null; // Post non trovato
+    });
+    
+    // Attendi tutti i post in parallelo
+    const loadedPosts = await Promise.all(postLoadPromises);
+    postFiles = loadedPosts.filter(post => post !== null);
     
     // Ordina per numero
     postFiles.sort((a, b) => a.number - b.number);
