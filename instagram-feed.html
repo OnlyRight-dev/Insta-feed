@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlyRight - Instagram Feed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 935px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background-color: #000000;
+            border-bottom: 1px solid #262626;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: #ffffff;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            padding: 30px 20px;
+        }
+
+        .profile-header {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 2px solid #262626;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-username {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            font-size: 16px;
+        }
+
+        .stat-number {
+            font-weight: 600;
+        }
+
+        .profile-bio {
+            margin-bottom: 12px;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .profile-description {
+            color: #f5f5f5;
+            margin-bottom: 8px;
+        }
+
+        .profile-link {
+            color: #00376b;
+            text-decoration: none;
+        }
+
+        .profile-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Highlights */
+        .highlights {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px 0;
+            overflow-x: auto;
+        }
+
+        .highlight-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 80px;
+            cursor: pointer;
+        }
+
+        .highlight-circle {
+            width: 77px;
+            height: 77px;
+            border-radius: 50%;
+            border: 2px solid #262626;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .highlight-name {
+            font-size: 12px;
+            color: #f5f5f5;
+            text-align: center;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid #262626;
+            margin-top: 40px;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 16px 0;
+            margin: 0 30px;
+            text-transform: uppercase;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #8e8e8e;
+            cursor: pointer;
+            border-top: 1px solid transparent;
+            margin-top: -1px;
+        }
+
+        .tab.active {
+            color: #ffffff;
+            border-top-color: #ffffff;
+        }
+
+        .tab-icon {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Feed Grid */
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            margin-top: 0;
+        }
+
+        .feed-item {
+            aspect-ratio: 1;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .feed-item:hover .feed-overlay {
+            opacity: 1;
+        }
+
+        .feed-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .feed-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feed-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .feed-stat-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .feed-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Quote/Text Posts */
+        .feed-item.quote-post {
+            background: linear-gradient(135deg, #1a0d2e 0%, #2d1b4e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 25px;
+            text-align: center;
+        }
+
+        .quote-post-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quote-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.4;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .quote-text-large {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Info Posts */
+        .feed-item.info-post {
+            background: linear-gradient(135deg, #1a0d2e 0%, #3d2b5e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .info-post-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .info-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .info-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #f5f5f5;
+            line-height: 1.5;
+        }
+
+        .info-feature {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 10px 0;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .info-feature-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        /* CTA Posts */
+        .feed-item.cta-post {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 25px;
+            text-align: center;
+        }
+
+        .cta-post-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .cta-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1.2;
+        }
+
+        .cta-button {
+            background: #ffffff;
+            color: #667eea;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Special First Post */
+        .feed-item.special-post {
+            background: #1a0d2e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .special-post-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 25px;
+            min-height: 100%;
+        }
+
+        .special-post-text-top {
+            font-size: 36px;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+            line-height: 1.1;
+            text-align: center;
+        }
+
+        .phone-mockup {
+            width: 210px;
+            height: 380px;
+            background: #1a1a1a;
+            border-radius: 32px;
+            padding: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            margin: 25px 0;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 22px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phone-status-bar {
+            position: absolute;
+            top: 12px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #000;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        .phone-status-icons {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .phone-content {
+            text-align: center;
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .phone-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #1a0d2e;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            line-height: 1.3;
+        }
+
+        .phone-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 16px 32px;
+            border-radius: 35px;
+            font-weight: 800;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            border: none;
+            cursor: pointer;
+            width: auto;
+            transition: transform 0.2s;
+        }
+
+        .phone-button:hover {
+            transform: scale(1.05);
+        }
+
+        .phone-button-arrow {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .special-post-text-bottom {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 25px;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .profile-picture {
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .feed-grid {
+                gap: 2px;
+            }
+
+            .special-post-content {
+                padding: 20px 15px;
+            }
+
+            .special-post-text-top {
+                font-size: 22px;
+                letter-spacing: 1.5px;
+            }
+
+            .phone-mockup {
+                width: 160px;
+                height: 290px;
+                padding: 8px;
+            }
+
+            .phone-screen {
+                padding: 10px;
+            }
+
+            .phone-content {
+                margin-top: 40px;
+                gap: 20px;
+            }
+
+            .phone-title {
+                font-size: 13px;
+            }
+
+            .phone-button {
+                font-size: 10px;
+                padding: 12px 20px;
+            }
+
+            .special-post-text-bottom {
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+
+            .quote-text {
+                font-size: 16px;
+            }
+
+            .quote-text-large {
+                font-size: 18px;
+            }
+
+            .info-title {
+                font-size: 18px;
+            }
+
+            .info-text {
+                font-size: 14px;
+            }
+
+            .info-feature-text {
+                font-size: 13px;
+            }
+
+            .cta-title {
+                font-size: 20px;
+            }
+
+            .cta-button {
+                font-size: 12px;
+                padding: 12px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="#" class="logo">Instagram</a>
+            <div class="header-icons">
+                <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+                <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21.697 16.468c-.02-.016-2.14-1.64-2.103-6.03.02-2.532-.812-4.782-2.347-6.335C15.872 2.71 14.01 1.94 12.005 1.93h-.013c-2.004.01-4.857.78-6.242 2.174-1.534 1.553-2.368 3.802-2.346 6.334.037 4.33-2.02 5.967-2.102 6.03-.26.193-.366.533-.265.838.102.308.39.515.712.515h4.92c.102 2.31 1.997 4.16 4.33 4.16s4.226-1.85 4.327-4.16h4.922c.322 0 .61-.206.71-.514.103-.307-.003-.645-.263-.838zM12 20.478c-1.505 0-2.73-1.177-2.828-2.658h5.656c-.1 1.48-1.323 2.66-2.828 2.66zM4.38 16.32c.74-1.132 1.548-3.028 1.524-5.896-.018-2.16.644-3.982 1.913-5.267C8.91 4.05 10.397 3.437 12 3.43c1.603.008 3.087.62 4.18 1.728 1.27 1.285 1.933 3.106 1.915 5.267-.024 2.868.785 4.765 1.525 5.896H4.38z"/>
+                </svg>
+                <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                </svg>
+                <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.206 0 4-1.794 4-4s-1.794-4-4-4-4 1.794-4 4 1.794 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Profile Section -->
+        <section class="profile-section">
+            <div class="profile-header">
+                <div class="profile-picture">OR</div>
+                <div class="profile-info">
+                    <div class="profile-username">
+                        <span style="font-weight: 300;">onlyright_it</span>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-number">25</span> post
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">939</span> follower
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">0</span> following
+                        </div>
+                    </div>
+                    <div class="profile-bio">
+                        <div class="profile-name">OnlyRight</div>
+                        <div class="profile-description">
+                            ∞ Incontra quell'unica persona con cui tutto ha senso<br>
+                            💜 Relazioni serie per persone vere<br>
+                            👇 matchmaking intelligente 👇
+                        </div>
+                        <a href="#" class="profile-link">onlyright.it</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Highlights -->
+            <div class="highlights">
+                <div class="highlight-item">
+                    <div class="highlight-circle">?</div>
+                    <div class="highlight-name">Quiz</div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-circle">👤</div>
+                    <div class="highlight-name">Member</div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-circle">📱</div>
+                    <div class="highlight-name">The app</div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-circle">❤️</div>
+                    <div class="highlight-name">❤️</div>
+                </div>
+                <div class="highlight-item">
+                    <div class="highlight-circle">💕</div>
+                    <div class="highlight-name">VogliaDiAmare</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/>
+                    </svg>
+                    Post
+                </div>
+                <div class="tab">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.823 1l2.974 5.002h-5.948l-2.65-4.497c-.494-.838-1.192-1.505-2.03-2.001l-.01-.003h7.584zm-8.788 0c-.831.407-1.529 1.07-2.03 1.505l-5.005 8.475v13.02h5.005v-13.02l1.6-2.71 1.43-2.27zm16.615 10.149l-1.599 2.707-8.006 13.579h-5.005l8.006-13.579 1.6-2.707h5.004zm-7.584 0l-2.65 4.497c-.494.838-1.192 1.505-2.03 2.001l-.01.003h5.948l2.974-5.002h-5.948zm-2.821-4.497l2.65 4.497h-5.948l-2.65-4.497c-.494-.838-1.192-1.505-2.03-2.001l-.01-.003h7.584c.831.407 1.529 1.07 2.03 1.505l.004.003z"/>
+                    </svg>
+                    Reel
+                </div>
+                <div class="tab">
+                    <svg class="tab-icon" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10.201 3.797L12 1.997l1.799 1.8a1.59 1.59 0 0 0 2.122 0l1.8-1.8L17.601 3.8a1.59 1.59 0 0 0 0-2.122l-1.8-1.8 1.8-1.8a1.59 1.59 0 0 0 0-2.122l-1.8 1.8-1.8-1.8a1.59 1.59 0 0 0-2.122 0l-1.8 1.8-1.8-1.8a1.59 1.59 0 0 0-2.122 0l-1.8 1.8L3.6 1.677a1.59 1.59 0 0 0 0 2.122l1.8 1.8-1.8 1.8a1.59 1.59 0 0 0 0 2.122l1.8-1.8 1.8 1.8a1.59 1.59 0 0 0 2.122 0l1.8-1.8 1.8 1.8a1.59 1.59 0 0 0 2.122 0zM10.2 3.8l-1.8 1.8-1.8-1.8a1.59 1.59 0 0 0-2.122 0l-1.8 1.8-1.8-1.8a1.59 1.59 0 0 0 0-2.122l1.8-1.8-1.8-1.8a1.59 1.59 0 0 0 0-2.122l1.8 1.8 1.8-1.8a1.59 1.59 0 0 0 2.122 0l1.8 1.8 1.8-1.8a1.59 1.59 0 0 0 2.122 0l1.8 1.8 1.8-1.8a1.59 1.59 0 0 0 0-2.122l-1.8 1.8 1.8 1.8a1.59 1.59 0 0 0 0 2.122l-1.8-1.8-1.8 1.8a1.59 1.59 0 0 0-2.122 0z"/>
+                    </svg>
+                    Tagged
+                </div>
+            </div>
+        </section>
+
+        <!-- Feed Grid -->
+        <section class="feed-grid">
+            <!-- First Post - Special Design -->
+            <div class="feed-item special-post">
+                <div class="special-post-content">
+                    <div class="special-post-text-top">
+                        TI AIUTIAMO A<br>TROVARE
+                    </div>
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <div class="phone-status-bar">
+                                <span>10:35</span>
+                                <div class="phone-status-icons">
+                                    <span>📶</span>
+                                    <span>🔋</span>
+                                </div>
+                            </div>
+                            <div class="phone-content">
+                                <div class="phone-title">CALCOLO COMPATIBILITA'</div>
+                                <button class="phone-button">
+                                    INIZIA IL QUIZ
+                                    <span class="phone-button-arrow">↓</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="special-post-text-bottom">
+                        RELAZIONI<br>AUTENTICHE<br>BASATE SU VALORI COMUNI
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>123</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>45</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Placeholder posts - sostituisci con le tue immagini -->
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>89</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>12</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>234</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>67</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>156</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>23</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>78</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>34</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>201</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>56</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>92</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>18</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>145</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>29</span>
+                    </div>
+                </div>
+            </div>
+            <div class="feed-item">
+                <div class="feed-placeholder">📷</div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>167</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>41</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUOVI POST PROPOSTI -->
+            
+            <!-- Post 10: Citazione -->
+            <div class="feed-item quote-post">
+                <div class="quote-post-content">
+                    <div class="quote-text quote-text-large">
+                        "L'amore non è trovare qualcuno perfetto, ma vedere qualcuno in modo imperfetto e perfetto allo stesso tempo."
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>234</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>67</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 11: Info - Perché OnlyRight -->
+            <div class="feed-item info-post">
+                <div class="info-post-content">
+                    <div class="info-title">PERCHÉ ONLYRIGHT?</div>
+                    <div class="info-feature">
+                        <div class="info-icon">🎯</div>
+                        <div class="info-feature-text">Match basati su valori reali</div>
+                    </div>
+                    <div class="info-feature">
+                        <div class="info-icon">💎</div>
+                        <div class="info-feature-text">Relazioni serie e durature</div>
+                    </div>
+                    <div class="info-feature">
+                        <div class="info-icon">🧠</div>
+                        <div class="info-feature-text">Algoritmo intelligente</div>
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>189</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>52</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 12: Citazione -->
+            <div class="feed-item quote-post">
+                <div class="quote-post-content">
+                    <div class="quote-text">
+                        "Quando due persone si incontrano e i loro valori si allineano, nasce qualcosa di magico."
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>156</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>38</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 13: CTA - Inizia Oggi -->
+            <div class="feed-item cta-post">
+                <div class="cta-post-content">
+                    <div class="cta-title">PRONTO A TROVARE<br>LA TUA PERSONA?</div>
+                    <button class="cta-button">SCARICA L'APP</button>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>278</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>91</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 14: Citazione -->
+            <div class="feed-item quote-post">
+                <div class="quote-post-content">
+                    <div class="quote-text">
+                        "Non cercare qualcuno che risolva tutti i tuoi problemi. Cerca qualcuno che non li crei."
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>203</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>44</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 15: Info - Come Funziona -->
+            <div class="feed-item info-post">
+                <div class="info-post-content">
+                    <div class="info-title">3 SEMPLICI PASSI</div>
+                    <div class="info-feature">
+                        <div class="info-icon">1️⃣</div>
+                        <div class="info-feature-text">Compila il quiz di compatibilità</div>
+                    </div>
+                    <div class="info-feature">
+                        <div class="info-icon">2️⃣</div>
+                        <div class="info-feature-text">Ricevi match personalizzati</div>
+                    </div>
+                    <div class="info-feature">
+                        <div class="info-icon">3️⃣</div>
+                        <div class="info-feature-text">Inizia una conversazione autentica</div>
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>312</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>78</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 16: Citazione -->
+            <div class="feed-item quote-post">
+                <div class="quote-post-content">
+                    <div class="quote-text">
+                        "L'amore vero inizia quando smetti di cercare la persona perfetta e inizi ad amare quella imperfetta perfettamente."
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>267</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>63</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 17: Info - Valori -->
+            <div class="feed-item info-post">
+                <div class="info-post-content">
+                    <div class="info-title">MATCH BASATI SU</div>
+                    <div class="info-text" style="margin-bottom: 15px;">Valori, obiettivi e visione della vita</div>
+                    <div class="info-feature">
+                        <div class="info-icon">💭</div>
+                        <div class="info-feature-text">Filosofia di vita</div>
+                    </div>
+                    <div class="info-feature">
+                        <div class="info-icon">🎯</div>
+                        <div class="info-feature-text">Obiettivi futuri</div>
+                    </div>
+                    <div class="info-feature">
+                        <div class="info-icon">❤️</div>
+                        <div class="info-feature-text">Priorità affettive</div>
+                    </div>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>198</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>55</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Post 18: CTA - Unisciti -->
+            <div class="feed-item cta-post">
+                <div class="cta-post-content">
+                    <div class="cta-title">UNISCITI A<br>MIGLIAIA DI PERSONE<br>CHE HANNO TROVATO<br>L'AMORE VERO</div>
+                    <button class="cta-button">INIZIA ORA</button>
+                </div>
+                <div class="feed-overlay">
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16.792 3.904A4.989 4.989 0 0 1 21.5 9.122c0 3.072-2.652 4.959-5.197 7.222-2.512 2.243-3.053 2.8-3.303 2.8-.25 0-.79-.557-3.303-2.8C6.652 14.081 4 12.194 4 9.122a4.989 4.989 0 0 1 4.708-5.218 4.21 4.21 0 0 1 3.675 1.941c.84 1.175.98 1.763 1.12 1.763s.278-.588 1.11-1.766a4.17 4.17 0 0 1 3.679-1.938m0-2a6.04 6.04 0 0 0-4.797 2.127 6.052 6.052 0 0 0-4.787-2.127A6.985 6.985 0 0 0 .5 9.122c0 3.61 2.55 5.827 5.015 7.97.283.246.569.494.853.747l1.027.918a44.998 44.998 0 0 0 3.518 3.018 2 2 0 0 0 2.174 0 45.263 45.263 0 0 0 3.626-3.115l.922-.824c.293-.26.59-.519.885-.774 2.334-2.025 4.98-4.32 4.98-7.94a6.985 6.985 0 0 0-6.708-7.218Z"/>
+                        </svg>
+                        <span>445</span>
+                    </div>
+                    <div class="feed-stat">
+                        <svg class="feed-stat-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.656 17.008a9.993 9.993 0 1 0-3.59 3.615L22 22l-1.344-4.992zM10 20a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm6-10a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        <span>127</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
