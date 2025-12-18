@@ -1,14 +1,14 @@
 {
     "posts": [
-        "post-01.html",
-        "post-02.html",
-        "post-03.html",
-        "post-04.html",
-        "post-05.html",
-        "post-06.html",
-        "post-07.html",
-        "post-08.html",
-        "post-09.html"
+        "01-post.html",
+        "02-post.html",
+        "03-post.html",
+        "04-post.html",
+        "05-post.html",
+        "06-post.html",
+        "07-post.html",
+        "08-post.html",
+        "09-post.html"
     ],
     "_comment": "Per cambiare l'ordine, modifica l'array sopra. L'ordine in questo file ha priorità sui numeri nei nomi dei file."
 }

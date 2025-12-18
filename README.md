@@ -97,26 +97,52 @@ Usa la classe `cta-post` per post con pulsanti di azione.
 
 ## Cartella Immagini
 
-La cartella `images/` è pronta per contenere tutte le immagini dei post. 
-Per usare un'immagine in un post, usa:
-```html
-<img src="images/nome-immagine.jpg" alt="Descrizione">
-```
+La cartella `images/` contiene le immagini dei post. Ogni post può avere una cartella dedicata:
+- `images/01-post/` - immagini per il post 01
+- `images/02-post/` - immagini per il post 02
+- ecc.
+
+**Formato nomi file supportati:**
+- `1Post.png`, `1post.png`, `1.png`
+- `1Post.jpg`, `1post.jpg`, `1.jpg`
+- `1Post.jpeg`, `1post.jpeg`, `1.jpeg`
+- E così via per i numeri da 1 a 20
+
+**Come funziona:**
+1. Il sistema cerca automaticamente immagini nella cartella `images/XX-post/`
+2. Se trova immagini, le usa come sfondo del div del post
+3. Se trova più immagini, crea un carosello automatico
+4. Se non trova immagini, carica il contenuto HTML dal file `posts/XX-post.html`
 
 ## Note Importanti
 
-### Server Locale (Consigliato)
-⚠️ **IMPORTANTE:** Se apri il file `index.html` direttamente nel browser (file://), potrebbe non funzionare a causa delle restrizioni di sicurezza del browser.
+### Server Locale (OBBLIGATORIO per le immagini)
+⚠️ **IMPORTANTE:** Se apri il file `index.html` direttamente nel browser (file://), le immagini **NON si caricheranno** a causa delle restrizioni CORS del browser.
 
-**Soluzioni:**
-1. **Usa un server locale** (consigliato):
-   - Se usi VS Code, installa l'estensione "Live Server"
-   - Oppure usa Python: `python -m http.server 8000`
-   - Oppure usa Node.js: `npx http-server`
+**Soluzione: Usa un server HTTP locale**
 
-2. **Hard Refresh dopo modifiche:**
-   - Premi `Ctrl+Shift+R` (Windows) o `Cmd+Shift+R` (Mac)
-   - Oppure `Ctrl+F5` per forzare il ricaricamento senza cache
+1. **Metodo più semplice - Script automatico:**
+   - **Windows:** Doppio click su `start-server.bat` (o esegui `start-server.ps1` in PowerShell)
+   - Il server si avvierà su `http://localhost:8000`
+   - Apri il browser e vai su `http://localhost:8000/index.html`
+
+2. **Metodo manuale:**
+   - Apri il terminale nella cartella del progetto
+   - Esegui: `python -m http.server 8000`
+   - Apri il browser su `http://localhost:8000/index.html`
+
+3. **Con VS Code:**
+   - Installa l'estensione "Live Server"
+   - Click destro su `index.html` → "Open with Live Server"
+
+**Per fermare il server:** Premi `CTRL+C` nel terminale
+
+### Caricamento Immagini
+Il sistema carica automaticamente le immagini dai post se esistono nella cartella `images/`:
+- Struttura: `images/01-post/1Post.png`, `images/02-post/2Post.png`, ecc.
+- Se trova immagini per un post, le usa come sfondo del div
+- Se non trova immagini, carica il contenuto HTML del post
+- Pattern supportati: `1Post.png`, `1post.png`, `1.png`, `1Post.jpg`, ecc.
 
 ### Funzionamento
 - I post vengono caricati in ordine numerico crescente (01, 02, 03...)
