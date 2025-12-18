@@ -477,7 +477,8 @@ async function loadPosts() {
     let postFiles = [];
     let postNumbers = [];
     
-    // Prova prima a caricare la configurazione JSON per sapere quali post esistono
+    // Prova prima a caricare la configurazione JSON (solo per l'ordine, non per limitare i post)
+    let configOrder = null;
     try {
         const configResponse = await fetch(`posts-config.json?t=${new Date().getTime()}`, {
             cache: 'no-cache'
@@ -485,20 +486,18 @@ async function loadPosts() {
         
         if (configResponse.ok) {
             const config = await configResponse.json();
-            console.log('📋 Configurazione trovata, uso ordine dal file JSON');
-            
-            // Estrai i numeri dei post dal JSON
-            for (const postFile of config.posts) {
+            console.log('📋 Configurazione trovata, userò l\'ordine dal JSON se disponibile');
+            configOrder = config.posts.map(postFile => {
                 const match = postFile.match(/(\d+)-post\.html/);
-                if (match) {
-                    postNumbers.push(parseInt(match[1]));
-                }
-            }
-        } else {
-            throw new Error('Config non trovato');
+                return match ? parseInt(match[1]) : null;
+            }).filter(num => num !== null);
         }
     } catch (error) {
-        console.log('📋 Configurazione non trovata, rilevamento dinamico dei post...');
+        console.log('📋 Configurazione non trovata, userò rilevamento dinamico completo');
+    }
+    
+    // SEMPRE fai rilevamento dinamico per trovare TUTTI i post esistenti
+    if (!configOrder || configOrder.length === 0) {
         
         // Rilevamento dinamico VELOCE: controlla solo HTML fallback (no fetch lento)
         // In file://, assumiamo che tutti i file esistano fino a un certo limite
@@ -523,50 +522,99 @@ async function loadPosts() {
                 }
             }
         } else {
-            // Con server HTTP, verifica velocemente i file esistenti
-            console.log('📋 Rilevamento veloce (server HTTP): controllo file esistenti');
+            // Con server HTTP (produzione), verifica i file esistenti
+            console.log('📋 Rilevamento (server HTTP/produzione): controllo file esistenti');
             
             let consecutiveEmpty = 0;
-            const maxConsecutiveEmpty = 5;
+            const maxConsecutiveEmpty = 10; // Aumentato per produzione (più permissivo)
+            
+            // Crea array di promesse per controllare tutti i post in parallelo (più veloce)
+            const postChecks = [];
             
             for (let i = 1; i <= maxPosts; i++) {
                 const postNumberStr = i.toString().padStart(2, '0');
                 const postFile = `${postNumberStr}-post.html`;
                 
-                let hasContent = false;
-                
-                // Controlla HTML fallback hardcoded (veloce)
+                // Se c'è HTML fallback, aggiungilo subito
                 if (postsContent[postFile]) {
-                    hasContent = true;
-                }
-                
-                // Controlla se esiste il file HTML (solo se non c'è fallback)
-                if (!hasContent) {
-                    try {
-                        const htmlPath = `posts/${postFile}`;
-                        const response = await fetch(htmlPath, { 
-                            method: 'HEAD', // HEAD è più veloce di GET
+                    postChecks.push(Promise.resolve({ number: i, exists: true, source: 'fallback' }));
+                } else {
+                    // Controlla se esiste il file HTML
+                    const htmlPath = `posts/${postFile}`;
+                    postChecks.push(
+                        fetch(htmlPath, { 
+                            method: 'HEAD',
                             cache: 'no-cache'
-                        });
-                        if (response.ok) {
-                            hasContent = true;
-                        }
-                    } catch (error) {
-                        // Ignora errori
-                    }
+                        })
+                        .then(response => ({ number: i, exists: response.ok, source: 'file' }))
+                        .catch(() => ({ number: i, exists: false, source: 'error' }))
+                    );
                 }
-                
-                if (hasContent) {
-                    postNumbers.push(i);
+            }
+            
+            // Attendi tutti i controlli in parallelo
+            const results = await Promise.all(postChecks);
+            
+            // Processa i risultati
+            for (const result of results) {
+                if (result.exists) {
+                    postNumbers.push(result.number);
                     consecutiveEmpty = 0;
                 } else {
                     consecutiveEmpty++;
                     if (consecutiveEmpty >= maxConsecutiveEmpty) {
+                        console.log(`🛑 Fermato dopo ${result.number - maxConsecutiveEmpty} post trovati (${consecutiveEmpty} vuoti consecutivi)`);
                         break;
                     }
                 }
             }
         }
+    } else {
+        // Se c'è un config, usa quello come base, ma aggiungi anche altri post trovati dinamicamente
+        console.log('📋 Config trovato, verifico anche altri post dinamicamente...');
+        
+        const isFileProtocol = window.location.protocol === 'file:';
+        const maxPosts = 50;
+        const foundPosts = new Set(configOrder); // Inizia con i post del config
+        
+        if (isFileProtocol) {
+            // In file://, aggiungi tutti i post fino a maxPosts
+            for (let i = 1; i <= maxPosts; i++) {
+                foundPosts.add(i);
+            }
+        } else {
+            // In produzione, verifica dinamicamente
+            const postChecks = [];
+            for (let i = 1; i <= maxPosts; i++) {
+                if (foundPosts.has(i)) continue; // Già nel config
+                
+                const postNumberStr = i.toString().padStart(2, '0');
+                const postFile = `${postNumberStr}-post.html`;
+                
+                if (postsContent[postFile]) {
+                    foundPosts.add(i);
+                } else {
+                    const htmlPath = `posts/${postFile}`;
+                    postChecks.push(
+                        fetch(htmlPath, { method: 'HEAD', cache: 'no-cache' })
+                        .then(response => response.ok ? i : null)
+                        .catch(() => null)
+                    );
+                }
+            }
+            
+            const additionalPosts = await Promise.all(postChecks);
+            additionalPosts.forEach(num => {
+                if (num !== null) foundPosts.add(num);
+            });
+        }
+        
+        // Se c'è un config, mantieni l'ordine del config e aggiungi gli altri alla fine
+        postNumbers = [...configOrder];
+        const additional = Array.from(foundPosts).filter(num => !configOrder.includes(num)).sort((a, b) => a - b);
+        postNumbers.push(...additional);
+        
+        console.log(`📋 Config: ${configOrder.length} post, trovati ${additional.length} aggiuntivi`);
     }
     
     console.log(`📋 Caricherò ${postNumbers.length} post: ${postNumbers.join(', ')}`);
