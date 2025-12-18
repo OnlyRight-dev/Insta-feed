@@ -13,13 +13,13 @@ async function checkPostImages(postNumber) {
                 const img = new Image();
                 let resolved = false;
                 
-                // Timeout velocissimo: se non carica in 100ms, considera non trovata
+                // Timeout velocissimo: se non carica in 30ms, considera non trovata
                 const timeout = setTimeout(() => {
                     if (!resolved) {
                         resolved = true;
                         resolve(false);
                     }
-                }, 100);
+                }, 30);
                 
                 img.onload = () => {
                     if (!resolved) {
@@ -41,44 +41,23 @@ async function checkPostImages(postNumber) {
             });
         };
         
-        // Cerca immagini da 1 a 10 (ridotto per velocità) con SOLO i pattern più comuni
-        // Carica in parallelo per velocità massima
+        // Cerca IMMEDIATAMENTE solo 1Post.png (pattern più comune - 95% dei casi)
+        // Controlla solo i primi 3 numeri in parallelo per velocità MASSIMA
         const imageChecks = [];
-        for (let num = 1; num <= 10; num++) {
-            // SOLO i 3 pattern più comuni (ridotto drasticamente)
-            const priorityPatterns = [
-                `${num}Post.png`,
-                `${num}Post.jpg`,
-                `${num}.png`
-            ];
-            
-            // Crea promesse per controlli paralleli
-            for (const pattern of priorityPatterns) {
-                const imagePath = `${imagesDirectory}${pattern}`;
-                imageChecks.push(
-                    testImageExists(imagePath).then(exists => ({ exists, path: imagePath, num }))
-                );
-            }
+        for (let num = 1; num <= 3; num++) {
+            const imagePath = `${imagesDirectory}${num}Post.png`;
+            imageChecks.push(
+                testImageExists(imagePath).then(exists => ({ exists, path: imagePath, num }))
+            );
         }
         
-        // Esegui tutti i controlli in parallelo
+        // Esegui tutti i controlli in parallelo (velocissimo)
         const results = await Promise.all(imageChecks);
         
-        // Processa risultati e aggiungi immagini trovate (senza duplicati)
-        const foundByNum = new Map();
+        // Aggiungi solo le immagini trovate
         for (const result of results) {
             if (result.exists) {
-                const normalizedPath = result.path.toLowerCase();
-                if (!foundByNum.has(result.num) || !foundImages.some(img => img.toLowerCase() === normalizedPath)) {
-                    foundByNum.set(result.num, result.path);
-                }
-            }
-        }
-        
-        // Aggiungi immagini in ordine
-        for (let num = 1; num <= 10; num++) {
-            if (foundByNum.has(num)) {
-                foundImages.push(foundByNum.get(num));
+                foundImages.push(result.path);
             }
         }
         
